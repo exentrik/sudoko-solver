@@ -43,7 +43,7 @@ func main() {
 
 	var log string = ""
 
-	board, log  = solve(board,false,false,false)
+	board, log  = solve(board,true,true,true)
 
 
 
@@ -51,6 +51,7 @@ func main() {
 
 	fmt.Println(log)
 	printBoard(board)
+	fmt.Println("Ran with timedelay of 100ms each solved cell")
 
 	/*
 	beforeExecution:= time.Now()
