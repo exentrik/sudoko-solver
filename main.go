@@ -10,11 +10,12 @@ import (
 	"os/exec"
 	"os"
 //"math/big"
+	"strconv"
 )
 
 var timeDelayed = false
 var showBoardGlobal = true
-var showCommentsGlobal = true
+var showCommentsGlobal = false
 type sudoku [81] cell
 
 type cell struct {
@@ -36,82 +37,51 @@ func main() {
 	//hardest board := setupBoard("8**********36******7**9*2***5***7*******457*****1***3***1****68**85***1**9****4**")
 	//board := setupBoard("******5***8***4*6*3*4*6*7***1*2*3*****9***4*****7*6*5***5*8*9*2*6*1***8***2******") //hard
 	//board := setupBoard("*4***6***9******41**8**9*5**9***7**2**3***8**4**8***1**8*3**9**16******7***5***8*") //impossible  klarte isje  2 solutions
+
+	//board := setupBoard("*4***6***9*6****41**8**9*5**9***7**2**3***8**4**8***1**8*3**9**16******7***5***8*") //impossible  men lagt in 6 i b3
+	//board := setupBoard("*4***6*989*6****41**8**9*5*89***7**26*3***87*4**8***1**8*3**9**16******7***5**18*") //impossible prøbd på
+
 	board := setupBoard("**3*****1***76*4**5****2*9***7****48*5*3*9*2*49****6***3*8****4**6*27***8*****2**") //evil
 	//board := setupBoard("*******1**189***6***6*814**8*3****245**3*8**627****5*8**251*7***8***324**9*******")
 	printBoard(board)
 
+	board,log, solved  := solve(board,false,false,false)
+	//board,log, solved  := guess(board)
 
-	var log string = ""
-
-	board, log  = solve(board,true,true,true)
-
-
-
-
-
-	fmt.Println(log)
-	printBoard(board)
-	fmt.Println("Ran with timedelay of 100ms each solved cell")
-
-	/*
-	beforeExecution:= time.Now()
-
-	r := new(big.Int)
-	fmt.Println(r.Binomial(1000, 10))
-
-
-
-
-	var solved bool
-	var solveCount int = 1
-	var optionChangeCount int = 0
-	var numberOfTriesToEasySolve int  =0
-
-	var madeProgress bool = true
-	for madeProgress && !solved {
-		madeProgress = false
-		solveCount = 1
-		for (solveCount>0 && solved == false){
-			board,solved,solveCount = easySolve(board)
-			numberOfTriesToEasySolve++
-			fmt.Printf("%v", "\n ")
-			fmt.Printf("%v", solveCount)
-			fmt.Printf("%v", " solved\n")
-			if(solveCount>1){madeProgress = true}
-		}
-
-		if(!solved){
-			board,solved,solveCount = solveByLookingAtGroupCellsOptions(board) // do this once
-			/*fmt.Printf("%v", solveCount)
-			fmt.Printf("%v", " solved\n")*//*
-			if(solveCount>1){madeProgress = true}
-		}
-
-		if(!solved){
-			board,optionChangeCount = solveByLookingAtPairsWithTheSameTwoOptionsAndRemovingOptionOnOtherCells(board)
-			if(optionChangeCount>1){madeProgress = true}
-		}
+	if(true){
+		fmt.Println(log)
 	}
-
-
-
 
 	if(solved){
-		fmt.Printf("%v", " Solved it!\n")
-		elapsed := time.Since(beforeExecution)
-		log.Printf("Solved it in %s", elapsed )
+		fmt.Println("did it")
+		if(verifySudoku(board)){
+			fmt.Println("verified")
+		}
 	}else{
-		fmt.Printf("%v", "\n Failed!\n")
+		fmt.Println("did not do it")
 	}
-
-
-*/
+	printBoard(board)
+	fmt.Println("Ran with timedelay of 100ms each solved cell")
 
 
 
 
 }
-func solve(board sudoku,slow bool, showBoard bool, showComments bool) (sudoku, string){
+
+func verifySudoku(board sudoku) bool{
+	for y := 0; y < 81; y++ { // for each cell in the sudoku board
+
+		for i := 0; i < 81; i++ {   // go through the other cells and check if it has the same value if its in the same groups.
+			if(isInSameGroup(y,i,board) && y!=i){
+				if(board[y].value == board[i].value){
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+func solve(board sudoku,slow bool, showBoard bool, showComments bool) (sudoku, string, bool){
 	timeDelayed = slow
 	showBoardGlobal = showBoard
 	showCommentsGlobal = showComments
@@ -135,20 +105,26 @@ func solve(board sudoku,slow bool, showBoard bool, showComments bool) (sudoku, s
 			/*fmt.Printf("%v", "\n ")
 			fmt.Printf("%v", solveCount)
 			fmt.Printf("%v", " solved\n")*/
-			if(solveCount>1){madeProgress = true}
+
+			if(solveCount>0){madeProgress = true}
 		}
 
 		if(!solved){
 			board,solved,solveCount = solveByLookingAtGroupCellsOptions(board) // do this once
 			/*fmt.Printf("%v", solveCount)
 			fmt.Printf("%v", " solved\n")*/
-			if(solveCount>1){madeProgress = true}
+			//fmt.Println("kjørte")
+			//fmt.Println(solveCount)
+			if(solveCount>0){madeProgress = true}
 		}
 
 		if(!solved){
 			board,optionChangeCount = solveByLookingAtPairsWithTheSameTwoOptionsAndRemovingOptionOnOtherCells(board)
-			if(optionChangeCount>1){madeProgress = true}
+			if(optionChangeCount>0){madeProgress = true}
+
 		}
+
+
 	}
 
 
@@ -158,9 +134,93 @@ func solve(board sudoku,slow bool, showBoard bool, showComments bool) (sudoku, s
 	if(solved){
 		printComment(" Solved it in: " +elapsed.String() + "\n")
 	}else{
-		fmt.Printf("%v", "\n Failed!\n")
+
 	}
- return board, solveLog
+ return board, solveLog, solved
+}
+
+func exportSudoko(board sudoku) string {
+	export :=""
+	for y := 0; y < 81; y++ { // for each cell in the sudoku board
+	export+= board[y].value
+	}
+	return export
+}
+
+func guess(originBoard sudoku) (sudoku, string, bool){
+	guessCounter :=0
+	//make an attempt to solve
+	originBoard,originLog,solved :=solve(originBoard,false,false,false)
+	if(!solved){//if not solved start guessing
+
+		board:=originBoard
+		logBeforeNewLog:=""
+
+		for y := 0; y < 81; y++ { // for each cell in the sudoku board
+			if ( board[y].value == "*" ) {//if the cell is not solved
+				for i:=0; i <len(board[y].options); i++{
+					solveLog=""
+					board=originBoard
+					logBeforeNewLog:=originLog+"Not so easy to solve.  Probably has multiple solutions. We need to guess\n"
+					guessCounter++
+					//fmt.Println("i er:"+ strconv.Itoa(i))
+					//fmt.Println("y er:")
+					//fmt.Println(y)
+					//fmt.Println("options er:"+string(board[y].options))
+					board[y].value=string(board[y].options[i])
+					board[y].options=""
+
+					//board = removeFromCellOptionsInAllFriendlyGroups(string(board[y].options[i]),y,board)
+					logBeforeNewLog = logBeforeNewLog+"Guessing "+ getCellName(board[y])+ " is "+ board[y].value + "\n"
+					//fmt.Println(getCellName(board[y]) + " is maybe:"+board[y].value+" \n")
+
+					//TESTING
+					var log string
+						//board,log,solved :=solve(board,false,false,false)
+						//board,log,solved = solve(board,false,false,false)
+						//board,log,solved =solve(board,false,false,false)
+					//if(y==11 && i ==2 && false){   //B3 e 6  WTF
+					//	fmt.Println(exportSudoko(board))
+					//	fmt.Print("HER")
+					//	printBoard(board)
+					//	board,log,solved =solve(board,false,true,true)
+					//}
+					board,log,solved =solve(board,false,false,false)
+
+
+
+					//printBoard(board)
+					if(solved){
+						if(verifySudoku(board)){
+
+								//fmt.Printf("%v", "I guess we guessed a good guess\n We guessed:")
+									//	fmt.Print(guessCounter)
+							//fmt.Println(" times")
+							log = logBeforeNewLog+log
+							log = log+"I guessed "+strconv.Itoa(guessCounter)
+							//log = log+string(guessCounter)  doesnt work
+							log = log+" times\n"
+							log = log+"But when i guessed that "+ getCellName(board[y])+ " was "+ board[y].value + ", well then the rest was easy"
+							return board,log,solved
+						}else{
+							board[y].value="*"
+							board=originBoard
+						}
+
+					} else{
+						board[y].value="*"
+						board=originBoard
+					}
+				}
+			}
+		}
+		logBeforeNewLog = logBeforeNewLog+ "Failed finding the solution after guessing ? times"
+		return originBoard, logBeforeNewLog , false
+	}else{
+		return originBoard, originLog , true
+	}
+
+
 }
 
 type bin time.Duration
@@ -283,40 +343,41 @@ func solveByLookingAtGroupCellsOptions(board sudoku) (sudoku, bool, int) {
 			}
 
 			//look at each option you have left and compare with groups, if is is missing from a group it is the correct one.
-			// this function does not update other cells options from other groups
-			//example: if it find that its the only one that have 6 as an option in
-			// horisontal.  it could update its friends in stack  and vertical and remove
-			// the 6 as an option there ,  could be an improvement.
+
 
 			for _, option := range board[y].options {
-				if(!strings.ContainsRune(horizontalCellsOptions, option) && len(horizontalCellsOptions)>1){
+				if(board[y].value =="*"){
+					if (!strings.ContainsRune(horizontalCellsOptions, option) && len(horizontalCellsOptions) > 1) {
 
 						printBoardAndDelay(board)
-						printComment(  getCellName(board[y]) +" is "+string(option)+". Reason: Is horisontally only possible here. \n" )
-
-					board[y].value = string(option)
-					board[y].options = ""
-					figuredOutCell = true
-					solveCount++
-				}else if(!strings.ContainsRune(verticalCellsOptions, option) && len(verticalCellsOptions)>1){
-
-						printBoardAndDelay(board)
-						printComment(  getCellName(board[y]) +" is "+string(option)+". Reason: Is vertically only possible here. \n" )
+						printComment(getCellName(board[y]) + " is " + string(option) + ". Reason: Is horisontally only possible here. \n")
 
 						board[y].value = string(option)
 						board[y].options = ""
+						board = removeFromCellOptionsInAllFriendlyGroups(board[y].value,y,board)
 						figuredOutCell = true
 						solveCount++
-					}else if(!strings.ContainsRune(stackCellsOptions, option) && len(stackCellsOptions)>1){
+					}else if (!strings.ContainsRune(verticalCellsOptions, option) && len(verticalCellsOptions) > 1) {
 
 						printBoardAndDelay(board)
-						printComment(  getCellName(board[y]) +" is "+string(option)+". Reason: Is only possible here in this stack  \n" )
+						printComment(getCellName(board[y]) + " is " + string(option) + ". Reason: Is vertically only possible here. \n")
 
 						board[y].value = string(option)
 						board[y].options = ""
+						board = removeFromCellOptionsInAllFriendlyGroups(board[y].value,y,board)
+						figuredOutCell = true
+						solveCount++
+					}else if (!strings.ContainsRune(stackCellsOptions, option) && len(stackCellsOptions) > 1) {
+
+						printBoardAndDelay(board)
+						printComment(getCellName(board[y]) + " is " + string(option) + ". Reason: Is only possible here in this stack  \n")
+						board[y].value = string(option)
+						board[y].options = ""
+						board = removeFromCellOptionsInAllFriendlyGroups(board[y].value,y,board)
 						figuredOutCell = true
 						solveCount++
 					}
+				}
 			}
 			if(!figuredOutCell){
 				//there is still an unsolved cell here
@@ -329,6 +390,26 @@ func solveByLookingAtGroupCellsOptions(board sudoku) (sudoku, bool, int) {
 	return board , sudokuComplete, solveCount
 }
 
+func removeFromCellOptionsInAllFriendlyGroups(option string, cellNumber int,board sudoku) sudoku{
+	for y := 0; y < 81; y++ { // for each cell in the sudoku board
+		if(isInSameGroup(y,cellNumber, board)){
+			var changed bool
+			board[y], changed = removeFromCellOptionsIfItCountainsThisValue(board[y],option)
+			if(changed){
+				//do absolutely nothing
+			}
+		}
+	}
+	return board
+}
+
+func isInSameGroup(number1 int, number2 int, board sudoku) bool{
+	if(board[number1].horizontal == board[number2].horizontal || board[number1].vertical == board[number2].vertical || board[number1].stack == board[number2].stack){
+		return true
+	}else{
+		return false
+	}
+}
 
 func easySolve(board sudoku) (sudoku, bool, int) {
 	var solveCount int = 0
@@ -371,6 +452,8 @@ func easySolve(board sudoku) (sudoku, bool, int) {
 				sudokuComplete= false
 
 			}
+		}else{
+			board[y].options = ""
 		}
 
 	}
