@@ -32,7 +32,9 @@ func main() {
 	/*timeDelayed = true
 	showBoard = false
 	showComments = true
-*/
+*/ //blablabal
+
+	start:= time.Now()
 	//lett board := setupBoard("53**7****6**195****98****6*8***6***34**8*3**17***2***6*6****28****419**5****8**79")
 	//hardest board := setupBoard("8**********36******7**9*2***5***7*******457*****1***3***1****68**85***1**9****4**")
 	//board := setupBoard("******5***8***4*6*3*4*6*7***1*2*3*****9***4*****7*6*5***5*8*9*2*6*1***8***2******") //hard
@@ -40,28 +42,33 @@ func main() {
 
 	//board := setupBoard("*4***6***9*6****41**8**9*5**9***7**2**3***8**4**8***1**8*3**9**16******7***5***8*") //impossible  men lagt in 6 i b3
 	//board := setupBoard("*4***6*989*6****41**8**9*5*89***7**26*3***87*4**8***1**8*3**9**16******7***5**18*") //impossible prøbd på
-
-	board := setupBoard("**3*****1***76*4**5****2*9***7****48*5*3*9*2*49****6***3*8****4**6*27***8*****2**") //evil
+	board := setupBoard("**2*********8**291**6**7*43**4*5*9***3*9*4128*1**63*7**697*23***2**315***8***576*") //kim sin
+	//board := setupBoard("**3*****1***76*4**5****2*9***7****48*5*3*9*2*49****6***3*8****4**6*27***8*****2**") //evil
 	//board := setupBoard("*******1**189***6***6*814**8*3****245**3*8**627****5*8**251*7***8***324**9*******")
-	printBoard(board)
+	//board := setupBoard("*********************************************************************************")
 
-	board,log, solved  := solve(board,false,false,false)
-	//board,log, solved  := guess(board)
+	//printBoard(board)
+
+	//board,log, solved  := solve(board,false,false,false)
+	board,log, solved  := guess(board)
+	timeUsed := time.Since(start)
+
 
 	if(true){
 		fmt.Println(log)
 	}
 
 	if(solved){
-		fmt.Println("did it")
 		if(verifySudoku(board)){
 			fmt.Println("verified")
+			fmt.Println(" Solved it in: " +timeUsed.String() + "\n")
+
 		}
 	}else{
 		fmt.Println("did not do it")
 	}
 	printBoard(board)
-	fmt.Println("Ran with timedelay of 100ms each solved cell")
+	//fmt.Println("Ran with timedelay of 100ms each solved cell")
 
 
 
@@ -85,10 +92,6 @@ func solve(board sudoku,slow bool, showBoard bool, showComments bool) (sudoku, s
 	timeDelayed = slow
 	showBoardGlobal = showBoard
 	showCommentsGlobal = showComments
-	beforeExecution:= time.Now()
-
-
-
 
 	var solved bool
 	var solveCount int = 1
@@ -124,16 +127,6 @@ func solve(board sudoku,slow bool, showBoard bool, showComments bool) (sudoku, s
 
 		}
 
-
-	}
-
-
-
-	elapsed := time.Since(beforeExecution)
-
-	if(solved){
-		printComment(" Solved it in: " +elapsed.String() + "\n")
-	}else{
 
 	}
  return board, solveLog, solved
@@ -174,28 +167,12 @@ func guess(originBoard sudoku) (sudoku, string, bool){
 					logBeforeNewLog = logBeforeNewLog+"Guessing "+ getCellName(board[y])+ " is "+ board[y].value + "\n"
 					//fmt.Println(getCellName(board[y]) + " is maybe:"+board[y].value+" \n")
 
-					//TESTING
 					var log string
-						//board,log,solved :=solve(board,false,false,false)
-						//board,log,solved = solve(board,false,false,false)
-						//board,log,solved =solve(board,false,false,false)
-					//if(y==11 && i ==2 && false){   //B3 e 6  WTF
-					//	fmt.Println(exportSudoko(board))
-					//	fmt.Print("HER")
-					//	printBoard(board)
-					//	board,log,solved =solve(board,false,true,true)
-					//}
+
 					board,log,solved =solve(board,false,false,false)
 
-
-
-					//printBoard(board)
 					if(solved){
 						if(verifySudoku(board)){
-
-								//fmt.Printf("%v", "I guess we guessed a good guess\n We guessed:")
-									//	fmt.Print(guessCounter)
-							//fmt.Println(" times")
 							log = logBeforeNewLog+log
 							log = log+"I guessed "+strconv.Itoa(guessCounter)
 							//log = log+string(guessCounter)  doesnt work
@@ -219,9 +196,8 @@ func guess(originBoard sudoku) (sudoku, string, bool){
 	}else{
 		return originBoard, originLog , true
 	}
-
-
 }
+
 
 type bin time.Duration
 
@@ -300,7 +276,6 @@ func solveByLookingAtPairsWithTheSameTwoOptionsAndRemovingOptionOnOtherCells(boa
 						if (board[i].options==board[y].options) {
 							for o := 0; o < 81; o++ {
 								if((o!=i && o !=y) && board[i].stack == board[o].stack){
-
 									board, optionChangeCount = removeTwoValuesFromCellOptionsIfItCountainsTheseValuesAndPrint(board,i,y,o,optionChangeCount)
 								}
 							}
@@ -311,8 +286,6 @@ func solveByLookingAtPairsWithTheSameTwoOptionsAndRemovingOptionOnOtherCells(boa
 
 		}
 	}
-
-
 	return board , optionChangeCount
 }
 
@@ -343,8 +316,6 @@ func solveByLookingAtGroupCellsOptions(board sudoku) (sudoku, bool, int) {
 			}
 
 			//look at each option you have left and compare with groups, if is is missing from a group it is the correct one.
-
-
 			for _, option := range board[y].options {
 				if(board[y].value =="*"){
 					if (!strings.ContainsRune(horizontalCellsOptions, option) && len(horizontalCellsOptions) > 1) {
@@ -422,11 +393,8 @@ func easySolve(board sudoku) (sudoku, bool, int) {
 		if ( board[y].value == "*" ) {//if the cell is not solved
 			for i := 0; i < 81; i++ {   // go through the other cells to compare
 				if ((board[y].horizontal == board[i].horizontal || board[y].vertical == board[i].vertical || board[y].stack == board[i].stack) &&board[y].number != board[i].number) {  //only compare with cells that are related , and not the same
-
-
 					if (board[i].value != "*") {//if this cell is solved, remove the value from options.
 						board[y].options = strings.Replace(board[y].options, board[i].value, "", -1)
-
 						if (len(board[y].options) == 1) { //if options now are only one,  set that as value and break
 
 							board[y].value = board[y].options
@@ -439,10 +407,6 @@ func easySolve(board sudoku) (sudoku, bool, int) {
 							break
 						}
 					}
-
-
-
-
 				}
 
 			}
@@ -533,10 +497,6 @@ func printBoard(board sudoku) {
 
 	for y := 0; y < 81; y++ {
 
-		//fmt.Printf("%q", board[y].horizontal)
-		//fmt.Printf("%v", " ")
-		//fmt.Printf("%q", board[y].vertical)
-
 		fmt.Printf("%v", board[y].value + " ")
 		if (newline == 9) {
 			newline = 0
@@ -546,44 +506,3 @@ func printBoard(board sudoku) {
 	}
 	fmt.Println("", "\n\n\n\n")
 }
-
-
-
-
-//type Sudoku [9][9]rune
-
-
-/*
-func (s Sudoku) String() string {
-	var buffer bytes.Buffer
-	for _, row := range s {
-		for _, col := range row {
-			if col == 0 {
-				col = '_'
-			}
-			buffer.WriteRune(' ')
-			buffer.WriteRune(col)
-			buffer.WriteRune(' ')
-		}
-		buffer.WriteString("\n")
-	}
-	return buffer.String()
-}
-
-*/
-
-
-/*
-NO LONGER WORKS, NOT A INT VALUE ANY MORE
-func (s *Sudoku) IsRowValid(row int) bool{
-	col := s[row]
-	var alreadyExists [9]bool // {false,false,false,false,false,false,false,false,false}
-	for _,number := range col {
-		if alreadyExists[number-1] {
-			return false
-		}
-		alreadyExists[number-1] = true
-	}
-	return true
-}
-*/
